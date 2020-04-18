@@ -14,7 +14,7 @@
                 <parameter name="Noise level"/>
             </module>
             <module name="Exact mass">
-                <parameter name="Noise level">1.0</parameter>
+                <parameter name="Noise level">100000.0</parameter>
             </module>
             <module name="Local maxima">
                 <parameter name="Noise level"/>
@@ -39,9 +39,9 @@
             <ms_level>1</ms_level>
         </parameter>
         <parameter name="Mass list">masses</parameter>
-        <parameter name="Min group size in # of scans">5</parameter>
-        <parameter name="Group intensity threshold">1.0</parameter>
-        <parameter name="Min highest intensity">1.0</parameter>
+        <parameter name="Min group size in # of scans">3</parameter>
+        <parameter name="Group intensity threshold">1e5</parameter>
+        <parameter name="Min highest intensity">1e5</parameter>
         <parameter name="m/z tolerance">
             <absolutetolerance>0.01</absolutetolerance>
             <ppmtolerance>10.0</ppmtolerance>
@@ -110,7 +110,7 @@
                     </module>
                 </parameter>
                 <parameter name="min feature height">10.0</parameter>
-                <parameter name="coefficient/area threshold">110.0</parameter>
+                <parameter name="coefficient/area threshold">10.0</parameter>
                 <parameter name="Peak duration range">
                     <min>0.0</min>
                     <max>0.8</max>
