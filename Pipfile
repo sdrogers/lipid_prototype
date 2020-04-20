@@ -6,6 +6,11 @@ name = "pypi"
 [packages]
 jupyter = "*"
 numpy = "*"
+pymzml = "*"
+scipy = "*"
+matplotlib = "*"
+molmass = "*"
+requests = "*"
 
 [dev-packages]
 
