@@ -12,6 +12,8 @@ matplotlib = "*"
 molmass = "*"
 requests = "*"
 pandas = "*"
+jupyterlab = "*"
+xlsxwriter = "*"
 
 [dev-packages]
 
