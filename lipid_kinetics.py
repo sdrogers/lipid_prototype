@@ -4,7 +4,7 @@ import numpy as np
 import pylab as plt
 from scipy.optimize import minimize
 from molmass import Formula
-from adduct_rules import AdductTransformer
+from adduct_rules import AdductTransformer,ParsingAdductTransformer
 import xlsxwriter
 
 def min_func(x,*args):
@@ -64,7 +64,7 @@ def fit(times,data_mat,fix_ends = True,make_plot = True,options = {},method = 'L
     return (k,a0,ai)
 
 
-def get_iso_intense(mzml_file_obj,target_rt_range,formula,adduct_type,mz_tol = 0.01,scan_delta = 2,max_iso_n = 5):
+def get_iso_intense(mzml_file_obj,target_rt_range,formula,adduct_type,mz_tol = (5,'ppm'),scan_delta = 2,max_iso_n = 5):
     
     relevant_scans = list(filter(lambda x: x.rt_in_seconds >= target_rt_range[0] and
                                 x.rt_in_seconds <= target_rt_range[1],mzml_file_obj.scans))
@@ -79,8 +79,13 @@ def get_iso_intense(mzml_file_obj,target_rt_range,formula,adduct_type,mz_tol = 0
     max_rt = None
     max_scan_no = None
     
+    if mz_tol[1] == 'ppm':
+        mz_tol_abs = t*mz_tol[0]/1e6
+    else:
+        mz_tol_abs = mz_tol[0]
+    
     for i,s in enumerate(relevant_scans):
-        intensity,exact_mz = get_max_mz(s,t-mz_tol,t+mz_tol)
+        intensity,exact_mz = get_max_mz(s,t-mz_tol_abs,t+mz_tol_abs)
         if intensity >= max_i:
             max_i = intensity
             max_idx = i
@@ -100,7 +105,7 @@ def get_iso_intense(mzml_file_obj,target_rt_range,formula,adduct_type,mz_tol = 0
         for scan_idx in range(max_idx-scan_delta,max_idx+scan_delta+1):
             if scan_idx >= 0 and scan_idx < len(relevant_scans):
                 s = relevant_scans[scan_idx]
-                intensity,exact_mz = get_max_mz(s,t-mz_tol,t+mz_tol)
+                intensity,exact_mz = get_max_mz(s,t-mz_tol_abs,t+mz_tol_abs)
                 if intensity >= max_i:
                     max_i = intensity
                     max_mz = exact_mz
@@ -122,25 +127,41 @@ def get_max_mz(scan,mz_min,mz_max):
     
 def compute_lipid_kinetics(lipid_name,lipid_dict,file_time_list,mzml_file_objs):
     rt_range = lipid_dict['rt_range']
-    data_mat = np.zeros((len(file_time_list),lipid_dict['n_iso']+1))
+    
+    exclude_files = lipid_dict['files to exclude']
+    if len(exclude_files) == 0:
+        n_exclude = 0
+    else:
+        n_exclude = len(exclude_files.split(';'))
+    
+    data_mat = np.zeros((len(file_time_list)-n_exclude,lipid_dict['n_iso']+1))
     
     discard_pos = -1
     all_isos = {}
+    bespoke_file_time_list = []
     for fpos,(o,time_val) in enumerate(file_time_list):
+        if o in lipid_dict['files to exclude'].split(';'):
+            print("\t{}, ignoring {}".format(lipid_name,o))
+            continue
+        bespoke_file_time_list.append((o,time_val))
         mzml_file_obj = mzml_file_objs[o]
-        isos = get_iso_intense(mzml_file_obj,rt_range,lipid_dict['formula'],lipid_dict['adduct_type'],max_iso_n = lipid_dict['n_iso'])
-#         plt.figure()
+        isos = get_iso_intense(mzml_file_obj,rt_range,
+                               lipid_dict['formula'],
+                               lipid_dict['adduct_type'],
+#                                mz_tol = (lipid_dict['mz_tolerance_ppm (optional)'],'ppm'),
+                               mz_tol = (0.01,'abs'),
+                               max_iso_n = lipid_dict['n_iso'])
 
         if fpos == 0:
             # check that intensities are monotonically decreasig. If not, chop.
             for a,(b,_,intensity,_,_,_) in enumerate(isos[:-1]):
                 if intensity < isos[a+1][2]:
                     discard_pos = a
-                    print(lipid,discard_pos)
+                    print(lipid_name,discard_pos)
                     break
         for ipos,(_,_,intensity,_,_,_) in enumerate(isos):
             if discard_pos > -1 and ipos > discard_pos:
-                print(lipid,fpos,ipos)
+                print(lipid_name,fpos,ipos)
                 data_mat[fpos,ipos] = 0
             else:
                 data_mat[fpos,ipos] = intensity
@@ -151,7 +172,7 @@ def compute_lipid_kinetics(lipid_name,lipid_dict,file_time_list,mzml_file_objs):
         data_mat = data_mat[:,:discard_pos+1]
         
         
-    times = [t for (f,t) in file_time_list]
+    times = [t for (f,t) in bespoke_file_time_list]
     
     data_mat/=data_mat.sum(axis=1)[:,None]
     
@@ -212,6 +233,7 @@ def create_plot(lipid_name,output_dict,output_filename = None):
 #         print("Writing: ",plt_name)
         plt.savefig(output_filename)
         print("Writing: ",output_filename)
+    plt.close()
       
     
 def col2alphabet(col_num):
