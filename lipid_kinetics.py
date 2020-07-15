@@ -136,7 +136,7 @@ def compute_lipid_kinetics(lipid_name,lipid_dict,file_time_list,mzml_file_objs,p
     else:
         n_exclude = len(exclude_files.split(';'))
     
-    n_iso = lipid_dict.get('n_iso',parameters['max_iso_n'])
+    n_iso = lipid_dict.get('max_iso_n',parameters['max_iso_n'])
     mz_tolerance = lipid_dict.get('mz_tolerance',parameters['mz_tolerance'])
     mz_tolerance_units = lipid_dict.get('mz_tolerance_units',parameters['mz_tolerance_units'])
     mz_tol = (mz_tolerance, mz_tolerance_units)
