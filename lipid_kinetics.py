@@ -127,22 +127,29 @@ def get_max_mz(scan,mz_min,mz_max):
         return max_i,max_mz
     
     
-def compute_lipid_kinetics(lipid_name,lipid_dict,file_time_list,mzml_file_objs):
+def compute_lipid_kinetics(lipid_name,lipid_dict,file_time_list,mzml_file_objs,parameters):
     rt_range = lipid_dict['rt_range']
     
-    exclude_files = lipid_dict['files to exclude']
+    exclude_files = lipid_dict.get('files to exclude',"")
     if len(exclude_files) == 0:
         n_exclude = 0
     else:
         n_exclude = len(exclude_files.split(';'))
     
-    data_mat = np.zeros((len(file_time_list)-n_exclude,lipid_dict['n_iso']+1))
+    n_iso = lipid_dict.get('max_iso_n',parameters['max_iso_n'])
+    mz_tolerance = lipid_dict.get('mz_tolerance',parameters['mz_tolerance'])
+    mz_tolerance_units = lipid_dict.get('mz_tolerance_units',parameters['mz_tolerance_units'])
+    mz_tol = (mz_tolerance, mz_tolerance_units)
+
+    data_mat = np.zeros((len(file_time_list)-n_exclude,n_iso+1))
     
     discard_pos = -1
     all_isos = {}
     bespoke_file_time_list = []
+    exclude_files = lipid_dict.get('files_to_exclude',"").split(';')
     for fpos,(o,time_val) in enumerate(file_time_list):
-        if o in lipid_dict['files to exclude'].split(';'):
+
+        if o in exclude_files:
             print("\t{}, ignoring {}".format(lipid_name,o))
             continue
         bespoke_file_time_list.append((o,time_val))
@@ -151,8 +158,9 @@ def compute_lipid_kinetics(lipid_name,lipid_dict,file_time_list,mzml_file_objs):
                                lipid_dict['formula'],
                                lipid_dict['adduct_type'],
 #                                mz_tol = (lipid_dict['mz_tolerance_ppm (optional)'],'ppm'),
-                               mz_tol = (0.01,'abs'),
-                               max_iso_n = lipid_dict['n_iso'])
+                               mz_tol = mz_tol,
+                               max_iso_n =  n_iso,
+                               scan_delta = parameters['scan_delta'])
 
         if fpos == 0:
             # check that intensities are monotonically decreasig. If not, chop.

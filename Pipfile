@@ -15,6 +15,7 @@ pandas = "*"
 jupyterlab = "*"
 xlsxwriter = "*"
 xlrd = "*"
+kivy = "*"
 
 [dev-packages]
 
