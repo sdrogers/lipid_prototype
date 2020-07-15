@@ -130,7 +130,7 @@ def get_max_mz(scan,mz_min,mz_max):
 def compute_lipid_kinetics(lipid_name,lipid_dict,file_time_list,mzml_file_objs,parameters):
     rt_range = lipid_dict['rt_range']
     
-    exclude_files = lipid_dict['files to exclude']
+    exclude_files = lipid_dict.get('files to exclude',"")
     if len(exclude_files) == 0:
         n_exclude = 0
     else:
@@ -146,8 +146,10 @@ def compute_lipid_kinetics(lipid_name,lipid_dict,file_time_list,mzml_file_objs,p
     discard_pos = -1
     all_isos = {}
     bespoke_file_time_list = []
+    exclude_files = lipid_dict.get('files_to_exclude',"").split(';')
     for fpos,(o,time_val) in enumerate(file_time_list):
-        if o in lipid_dict['files to exclude'].split(';'):
+
+        if o in exclude_files:
             print("\t{}, ignoring {}".format(lipid_name,o))
             continue
         bespoke_file_time_list.append((o,time_val))
