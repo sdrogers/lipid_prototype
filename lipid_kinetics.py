@@ -69,6 +69,8 @@ def get_iso_intense(mzml_file_obj,target_rt_range,formula,adduct_type,mz_tol = (
     relevant_scans = list(filter(lambda x: x.rt_in_seconds >= target_rt_range[0] and
                                 x.rt_in_seconds <= target_rt_range[1],mzml_file_obj.scans))
     spectrum = Formula(formula).spectrum()
+    if adduct_type == '[M-H+FA]-':
+        adduct_type = '[M-H+CH2O2]-'
     target_mz = [AdductTransformer().mass2ion(x[0],adduct_type) for x in spectrum.values()]
     target_mz.sort()
     isos = []
@@ -252,10 +254,13 @@ def write_xlsx_block(worksheet,list_vals,row_num,start_col):
         worksheet.write(cell,v)
         
 def create_xlsx_output(output_dict,output_filename = 'test.xlsx'):
-    workbook = xlsxwriter.Workbook(output_filename)
+    workbook = xlsxwriter.Workbook(output_filename,{'nan_inf_to_errors': True})
     for lipid_no,lipid in enumerate(output_dict):
         row_num = 1
-        worksheet = workbook.add_worksheet(lipid.replace(':',' '))
+        sheet_name = lipid.replace(':',' ')
+        sheet_name = sheet_name.replace('[','(')
+        sheet_name = sheet_name.replace(']',')')
+        worksheet = workbook.add_worksheet(sheet_name)
         cell = col2alphabet(1) + str(row_num)
         worksheet.write(cell,lipid)
         row_num += 1
