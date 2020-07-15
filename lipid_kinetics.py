@@ -159,7 +159,8 @@ def compute_lipid_kinetics(lipid_name,lipid_dict,file_time_list,mzml_file_objs,p
                                lipid_dict['adduct_type'],
 #                                mz_tol = (lipid_dict['mz_tolerance_ppm (optional)'],'ppm'),
                                mz_tol = mz_tol,
-                               max_iso_n =  n_iso)
+                               max_iso_n =  n_iso,
+                               scan_delta = parameters['scan_delta'])
 
         if fpos == 0:
             # check that intensities are monotonically decreasig. If not, chop.
