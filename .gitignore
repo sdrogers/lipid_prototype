@@ -33,6 +33,12 @@ MANIFEST
 *.manifest
 *.spec
 
+/lipid_files
+
+
+test.xlsx
+*.png
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
